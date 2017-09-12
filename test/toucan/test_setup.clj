@@ -5,6 +5,7 @@
             (toucan [db :as db]
                     [models :as models])
             (toucan.test-models [category :refer [Category]]
+                                [inventory :refer [Inventory]]
                                 [user :refer [User]]
                                 [venue :refer [Venue]])
             [toucan.util.test :as u])
@@ -52,7 +53,13 @@
        name VARCHAR(256) UNIQUE NOT NULL,
        \"parent-category-id\" INTEGER
      );"
-    "TRUNCATE TABLE categories RESTART IDENTITY CASCADE;"))
+    "TRUNCATE TABLE categories RESTART IDENTITY CASCADE;"
+    ;; Inventory
+    "CREATE TABLE IF NOT EXISTS inventories (
+      id SERIAL PRIMARY KEY,
+      sku VARCHAR(256) UNIQUE NOT NULL,
+      name VARCHAR(256) NOT NULL);"
+    "TRUNCATE TABLE inventories RESTART IDENTITY CASCADE;"))
 
 (def ^java.sql.Timestamp jan-first-2017 (Timestamp/valueOf "2017-01-01 00:00:00"))
 
@@ -72,7 +79,12 @@
     [{:name "bar"}
      {:name "dive-bar", :parent-category-id 1}
      {:name "resturaunt"}
-     {:name "mexican-resturaunt", :parent-category-id 3}]))
+     {:name "mexican-resturaunt", :parent-category-id 3}])
+  ;; Inventory
+  (db/simple-insert-many! Inventory
+    [{:name "Computer" :sku "cp-1"}
+     {:name "Text Book" :sku "tb-1"}
+     {:name "Pencils" :sku "pn-1"}]))
 
 (defn reset-db!
   "Reset the DB to its initial state, creating tables if needed and inserting the initial test data."

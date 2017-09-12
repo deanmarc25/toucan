@@ -266,7 +266,12 @@
 
       (add-property! :timestamped?
         :insert (fn [obj] (assoc obj :created-at (new-timestamp), :updated-at (new-timestamp)))
-        :update (fn [obj] (assoc obj :updated-at (new-timestamp))))"))
+        :update (fn [obj] (assoc obj :updated-at (new-timestamp))))")
+
+  (primary-key [this]
+    "Returns a keyword that represents the primary key.
+
+     The default implementation returns `:id`"))
 
 
 ;;;                                                      INTERNAL IMPL
@@ -337,19 +342,24 @@
    :pre-update     identity
    :post-select    identity
    :pre-delete     (constantly nil)
-   :hydration-keys (constantly nil)})
+   :hydration-keys (constantly nil)
+   :primary-key    (constantly :id)})
 
 (defn- invoke-model
   "Fetch an object with a specific ID or all objects of type ENTITY from the DB.
 
      (invoke-model Database)           -> seq of all databases
-     (invoke-model Database 1)         -> Database w/ ID 1
+     (invoke-model Database 1)         -> Database w/ ID 1 (or primary-key)
      (invoke-model Database :id 1 ...) -> A single Database matching some key-value args"
   ([model]
    ((resolve 'toucan.db/select) model))
   ([model id]
    (when id
-     (invoke-model model :id id)))
+     (if (map? id)
+       (let [args (vec (flatten (into [] id)))
+             invoke-part (partial invoke-model model)]
+         (apply invoke-part args))
+       (invoke-model model (primary-key model) id))))
   ([model k v & more]
    (apply (resolve 'toucan.db/select-one) model k v more)))
 

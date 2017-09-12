@@ -4,6 +4,7 @@
                     [models :as models])
             [toucan.test-setup :as test]
             (toucan.test-models [category :refer [Category], :as category]
+                                [inventory :refer [Inventory map->InventoryInstance]]
                                 [user :refer [User]]
                                 [venue :refer [Venue map->VenueInstance]])
             [toucan.util.test :as tu]))
@@ -177,3 +178,13 @@
 (expect
  #toucan.test_models.venue.VenueInstance{}
  (empty (Venue :name "BevMo")))
+
+;; Test using a primary key other than `id`
+(expect
+ #toucan.test_models.inventory.InventoryInstance{:name "Computer", :sku "cp-1" :id 1}
+ (Inventory "cp-1"))
+
+;; Test using multiple keys as a fake primary
+(expect
+ #toucan.test_models.inventory.InventoryInstance{:name "Computer", :sku "cp-1" :id 1}
+ (Inventory {:sku "cp-1" :name "Computer"}))
